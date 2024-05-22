@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -26,6 +27,28 @@ public class BirthdaySystem extends ListenerAdapter {
         scheduleDailyBirthdayCheck();
     }
 
+    public void onMessageReceived(MessageReceivedEvent event) {
+        if(event.getMessage().equals("!setup geburtstage")) {
+            event.getMessage().delete().queue();
+            EmbedBuilder eb = new EmbedBuilder()
+                    .setTitle("Geburtstags System")
+                    .setDescription("Hier könnt ihr sehen, wer alles Geburtstag hat. Wenn du möchtest, dass an deinem Geburtstag eine Nachricht gesendet wird, kannst du deinen Geburtstag hinzufügen mit:\n" +
+                            "\n" +
+                            "/birthday add [tag] [monat] [jahr (optional)]\n" +
+                            "\n" +
+                            "Um einen Geburtstag zu löschen, benutze:\n" +
+                            "\n" +
+                            "/birthday delete\n" +
+                            "\n" +
+                            "Mit:\n" +
+                            "\n" +
+                            "/birthday show [user]\n" +
+                            "\n" +
+                            "kannst du sehen, wann ein bestimmter Nutzer Geburtstag hat.");
+            event.getChannel().sendMessageEmbeds(eb.build()).queue();
+
+        }
+    }
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (event.getName().equals("birthday")) {

@@ -106,7 +106,6 @@ public class Main {
         jda.enableCache(CacheFlag.ONLINE_STATUS);
         EnumSet<CacheFlag> enumSet = EnumSet.of(CacheFlag.ONLINE_STATUS, CacheFlag.CLIENT_STATUS, CacheFlag.EMOJI, CacheFlag.VOICE_STATE, CacheFlag.STICKER);
         jda.enableCache(enumSet);
-        // Erstelle eine Instanz von OffsetDateTime mit der aktuellen Zeit als Startzeit des Bots
         OffsetDateTime botStartTime = OffsetDateTime.now();
         jda.addEventListeners(
                 new Variable(),
@@ -123,7 +122,8 @@ public class Main {
                 new messageinfocontextmenu(),
                 new serverinfo(),
                 new avatar(),
-                //new MyJDBC(),
+                new saySlashCommand(),
+                new sonstiges(),
                 new FlipCoinSlashCommand()
         );
 
@@ -153,7 +153,7 @@ public class Main {
         OptionData optionDataUser = new OptionData(OptionType.USER, "user", "Wähle einen Benutzer!", true);
 
 
-        Objects.requireNonNull(client.getGuildById(Variable.server_id)).updateCommands().addCommands(
+    client.getGuildById(Variable.server_id).updateCommands().addCommands(
                 Commands.slash("bot", "Bot Einstellungen!")
                         .addSubcommands(new SubcommandData("info", "Zeigt Information zum Bot an!"))
                         .addSubcommands(new SubcommandData("restart", "Hier mit kannst du den Bot Restarten!"))
@@ -169,8 +169,8 @@ public class Main {
                         .addSubcommands(new SubcommandData("show", "Zeigt den Geburtstag von einem User.")
                                 .addOption(OptionType.USER, "user", "Hier bitte den Nutzer auswählen.", true)
                         )
-                        .addSubcommands(new SubcommandData("list", "Zeigt alle Geburtstage an.")
-                        )
+                        /*.addSubcommands(new SubcommandData("list", "Zeigt alle Geburtstage an.")
+                        )*/
                         .addSubcommands(new SubcommandData("delete", "Lösche dein Geburtstag aus der Liste.")
                         )
                         .addSubcommands(new SubcommandData("admin-remove", "Lösche einen Geburtstag von einem User aus der Liste.")
@@ -185,6 +185,10 @@ public class Main {
 
                 //Ende
 
+                //Command: /stinker
+                Commands.slash("stinker", "Sehe wie viel Prozent jemand stinkt").addOptions(optionDataUser),
+                //Command: /thorma
+                Commands.slash("thorma", "Informationen zu Thorma"),
                 //Command: /say <nachricht>
                 Commands.slash("say", "Hiermit kannst du über den Bot eine Nachricht senden!").addOptions(optionDataNachricht),
                 // Command: /avatar <user>
@@ -227,13 +231,10 @@ public class Main {
                 //Ende
 
 
-             /*   Commands.slash("translate", "Text übersetzen")
-                        .addOption(OptionType.STRING, "text", "Hier den Text zum übersetzen eingeben!", true)
-                        .addOption(OptionType.STRING, "sprache", "Hier musst du die Sprache in der du den Text übersetzen möchtest angeben!", true)*/
+
                 Commands.context(Command.Type.MESSAGE, "Edit Embed"),
                 Commands.context(Command.Type.MESSAGE, "Nachricht Info")
         ).queue();
-
 
     }
 }

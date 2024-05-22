@@ -1,4 +1,6 @@
 Variable.*
+*.ist
+*.Ist
 # Compiled class file
 *.class
 

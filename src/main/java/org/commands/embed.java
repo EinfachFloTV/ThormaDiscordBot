@@ -50,7 +50,7 @@ public class embed extends ListenerAdapter {
                     .setDescription(description)
                     .setFooter(event.getUser().getId())
                     .setTimestamp(OffsetDateTime.now())
-                    .setAuthor(event.getUser().getAsTag(), null, event.getMember().getEffectiveAvatarUrl());
+                    .setAuthor(event.getUser().getName(), null, event.getMember().getEffectiveAvatarUrl());
 
             event.getChannel().sendMessageEmbeds(embedBuilder1.build()).queue();
 
