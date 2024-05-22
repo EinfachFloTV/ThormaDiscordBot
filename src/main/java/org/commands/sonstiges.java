@@ -11,8 +11,11 @@ public class sonstiges extends ListenerAdapter {
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 
         if(event.getName().equals("thorma")) {
+            String[] RandomNachrichten = { "Thorma stinkt nach verfaulten Thormatensuppe", "Thorma ist ein Minigame suchti" };
+            Random random = new Random();
+            int randomIndex = random.nextInt(RandomNachrichten.length);
 
-            event.reply("Thorma stinkt nach verfaulten Thormatensuppe").queue();
+            event.reply(RandomNachrichten[randomIndex]).queue();
         }
 
         if(event.getName().equals("stinker")) {
@@ -22,7 +25,7 @@ public class sonstiges extends ListenerAdapter {
             Random random = new Random();
             int randomNumber = random.nextInt(100) + 1;
 
-            event.reply(user.getAsMention() + " stinkt zu " + randomNumber + "%").queue();
+            event.reply(user.getEffectiveName() + " stinkt zu " + randomNumber + "%").queue();
         }
     }
 }
