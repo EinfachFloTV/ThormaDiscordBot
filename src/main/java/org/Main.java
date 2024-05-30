@@ -169,8 +169,8 @@ public class Main {
                         .addSubcommands(new SubcommandData("show", "Zeigt den Geburtstag von einem User.")
                                 .addOption(OptionType.USER, "user", "Hier bitte den Nutzer auswählen.", true)
                         )
-                        /*.addSubcommands(new SubcommandData("list", "Zeigt alle Geburtstage an.")
-                        )*/
+                        .addSubcommands(new SubcommandData("list", "Zeigt alle Geburtstage an.")
+                        )
                         .addSubcommands(new SubcommandData("delete", "Lösche dein Geburtstag aus der Liste.")
                         )
                         .addSubcommands(new SubcommandData("admin-remove", "Lösche einen Geburtstag von einem User aus der Liste.")

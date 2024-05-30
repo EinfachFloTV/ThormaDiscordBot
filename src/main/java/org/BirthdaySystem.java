@@ -26,29 +26,26 @@ public class BirthdaySystem extends ListenerAdapter {
     public void onReady(ReadyEvent event) {
         scheduleDailyBirthdayCheck();
     }
-
+    /*@Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if(event.getMessage().equals("!setup geburtstage")) {
-            event.getMessage().delete().queue();
+        if(event.getMessage().getContentRaw().equals("geburtstagesetup")) {
             EmbedBuilder eb = new EmbedBuilder()
                     .setTitle("Geburtstags System")
                     .setDescription("Hier könnt ihr sehen, wer alles Geburtstag hat. Wenn du möchtest, dass an deinem Geburtstag eine Nachricht gesendet wird, kannst du deinen Geburtstag hinzufügen mit:\n" +
                             "\n" +
-                            "/birthday add [tag] [monat] [jahr (optional)]\n" +
-                            "\n" +
+                            "/birthday add [tag] [monat] [jahr (ausgeschrieben z.B 2003) (optional)]\n" +
+                            "\n\n" +
                             "Um einen Geburtstag zu löschen, benutze:\n" +
                             "\n" +
                             "/birthday delete\n" +
+                            "\n\n" +
+                            "Um zu sehen wenn der Nutzer geburtstag hat, benutze:\n" +
                             "\n" +
-                            "Mit:\n" +
-                            "\n" +
-                            "/birthday show [user]\n" +
-                            "\n" +
-                            "kannst du sehen, wann ein bestimmter Nutzer Geburtstag hat.");
+                            "/birthday show [user]\n" );
             event.getChannel().sendMessageEmbeds(eb.build()).queue();
-
         }
-    }
+    }*/
+
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (event.getName().equals("birthday")) {
@@ -280,7 +277,7 @@ public class BirthdaySystem extends ListenerAdapter {
                     EmbedBuilder eb = new EmbedBuilder()
                             .setTitle("Happy Birthday!")
                             .setDescription(user.getAsMention() + " hat heute Geburtstag!!! 🎉🎉🎉\n"+
-                                    "Wir wünschen ihm alles gute");
+                                    "Wir wünschen ihm/ihr alles gute");
 
                             channel.sendMessage(user.getAsMention()).addEmbeds(eb.build()).queue(message -> {
                                 // Reactions hinzufügen
