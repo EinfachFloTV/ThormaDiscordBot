@@ -1,1 +1,4 @@
+main\java\org\commands\MCSERVERINFO$ServerStatus.class
+main\java\org\commands\MCSERVERINFO$ServerStatus$Players.class
+main\java\org\commands\MCSERVERINFO.class
 main\java\org\commands\saySlashCommand.class

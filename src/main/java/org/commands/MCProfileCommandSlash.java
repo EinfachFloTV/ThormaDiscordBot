@@ -19,8 +19,9 @@ import java.util.regex.Pattern;
 public class  MCProfileCommandSlash extends ListenerAdapter {
 
     public void onSlashCommandInteraction (SlashCommandInteractionEvent event) {
+        if (!event.getName().equals("minecraft")) return;
 
-        if (event.getName().equals("minecraft")) {
+        if (event.getSubcommandName().equals("profile")) {
             String name = Objects.requireNonNull(event.getOption("name")).getAsString();
 
             // Set the API endpoint URL

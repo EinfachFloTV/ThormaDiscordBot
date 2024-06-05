@@ -1,8 +1,5 @@
 package main.java.org;
 
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Message;
-
 import java.awt.*;
 import java.sql.*;
 import java.util.*;
@@ -199,6 +196,110 @@ public class MyJDBC /*extends ListenerAdapter*/ {
             // Create the CounterSystem table
             Statement statement = connection.createStatement();
             statement.execute(createTableQuery);
+
+            connection.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public static String[] getCountNumber() {
+        try {
+            Connection connection = DriverManager.getConnection(Variable.DB_URL/*,DB_USERNAME,DB_PASSWORD*/);
+
+            // Überprüfe, ob die Tabelle CounterSystem vorhanden ist
+            if (!MyJDBC.isCounterSystemTableExists()) {
+                System.out.println("[Counter-System-DB] Tabelle existiert nicht");
+                // Tabelle existiert nicht, also erstelle sie
+                MyJDBC.createCounterSystemTable();
+                System.out.println("[Counter-System-DB] Tabelle wurde erstellt");
+            } else {
+                System.out.println("[Counter-System-DB] Tabelle existiert bereits");
+            }
+
+            PreparedStatement selectStatement = connection.prepareStatement(
+                    "SELECT * FROM CounterSystem"
+            );
+
+            ResultSet resultSet = selectStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String userId = resultSet.getString("userId");
+                int nextNum = resultSet.getInt("nextNum");
+                return new String[]{userId, String.valueOf(nextNum)};
+            }
+
+            connection.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+
+    public static void setCountNumber(String userId, int nextNumber) {
+        try {
+            Connection connection = DriverManager.getConnection(Variable.DB_URL/*,DB_USERNAME,DB_PASSWORD*/);
+
+            // Überprüfe, ob die Tabelle CounterSystem vorhanden ist
+            if (!MyJDBC.isCounterSystemTableExists()) {
+                System.out.println("[Counter-System-DB] Tabelle existiert nicht");
+                // Tabelle existiert nicht, also erstelle sie
+                MyJDBC.createCounterSystemTable();
+                System.out.println("[Counter-System-DB] Tabelle wurde erstellt");
+            } else {
+                System.out.println("[Counter-System-DB] Tabelle existiert bereits");
+            }
+
+            PreparedStatement insertStatement = connection.prepareStatement(
+                    "UPDATE CounterSystem SET userId = ?, nextNum = ?"
+            );
+
+            insertStatement.setString(1, userId);
+            insertStatement.setInt(2, nextNumber);
+            insertStatement.execute();
+
+            connection.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static boolean isCounterSystemTableExists() {
+        try {
+            Connection connection = DriverManager.getConnection(Variable.DB_URL/*,DB_USERNAME,DB_PASSWORD*/);
+
+            // Check if the CounterSystem table exists
+            DatabaseMetaData metaData = connection.getMetaData();
+            ResultSet resultSet = metaData.getTables(null, null, "CounterSystem", null);
+            connection.close();
+            return resultSet.next();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void createCounterSystemTable() {
+        try {
+            Connection connection = DriverManager.getConnection(Variable.DB_URL/*,DB_USERNAME,DB_PASSWORD*/);
+
+            // SQL query to create CounterSystem table
+            String createTableQuery = "CREATE TABLE CounterSystem (" +
+                    "nextNum INT, " +
+                    "userId VARCHAR(20)" +
+                    ");";
+
+            // Create the CounterSystem table
+            Statement statement = connection.createStatement();
+            statement.execute(createTableQuery);
+
+            // Insert initial values into the CounterSystem table
+            String insertInitialValuesQuery = "INSERT INTO CounterSystem (nextNum, userId) VALUES (1, 1);";
+            statement.execute(insertInitialValuesQuery);
 
             connection.close();
 

@@ -112,8 +112,6 @@ public class Main {
                 new BotSettingsCommands(),
                 new BotInfoCommand(botStartTime),
                 new BirthdaySystem(),
-                /*new CountingSystem(),
-                new GuessTheNumber(),*/
                 new RandomMeme(),
                 new wetterbericht(),
                 new WitzGen(),
@@ -124,7 +122,9 @@ public class Main {
                 new avatar(),
                 new saySlashCommand(),
                 new sonstiges(),
-                new FlipCoinSlashCommand()
+                new MCSERVERINFO(),
+                new FlipCoinSlashCommand(),
+                new CountingSystem()
         );
 
         client = jda.build().awaitReady();
@@ -211,8 +211,10 @@ public class Main {
                 // Ende
 
                 // Command: /minecraft
-                Commands.slash("minecraft", "Minecraft Informationen zu einem Spieler!")
-                        .addOptions(optionDataminecraftprofilename),
+                Commands.slash("minecraft", "Minecraft Befehle!")
+                        .addSubcommands(new SubcommandData("regeln", "Seh dir die Regeln zum Thorma90 Netzwerk an!"))
+                        .addSubcommands(new SubcommandData("server", "Seh dir Informationen zum Thorma90 Netzwerk an!"))
+                        .addSubcommands(new SubcommandData("profile", "Minecraft Informationen zu einem Spieler!").addOptions(optionDataminecraftprofilename)),
                 // Ende
 
                 // Command: /witz
