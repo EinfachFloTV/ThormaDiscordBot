@@ -1,12 +1,14 @@
 package main.java.org;
 
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
 import java.awt.*;
 import java.sql.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MyJDBC /*extends ListenerAdapter*/ {
+public class MyJDBC extends ListenerAdapter {
 
     private static final String DB_URL = Variable.DB_URL;
 
@@ -29,14 +31,12 @@ public class MyJDBC /*extends ListenerAdapter*/ {
     public static Map<String, String> getAllBirthdays() {
         Map<String, String> birthdays = new HashMap<>();
         String query = "SELECT * FROM BirthdaySystem";
-        try {Connection connection = DriverManager.getConnection(DB_URL);
+        try {Connection connection = DriverManager.getConnection(Variable.DB_URL);
             if (!MyJDBC.isBirthdaySystemTableExists()) {
                 MyJDBC.createBirthdaySystemTable();
             }
-
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
-
 
             while (resultSet.next()) {
                 String userId = resultSet.getString("userId");
@@ -55,6 +55,32 @@ public class MyJDBC /*extends ListenerAdapter*/ {
             throw new RuntimeException(e);
         }
         return birthdays;
+    }
+
+    public  static String getBirthdayUser1(String userId) {
+        String query = "SELECT day, month, year FROM BirthdaySystem WHERE userId = ?";
+        try (Connection connection = DriverManager.getConnection(DB_URL);
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            if (!MyJDBC.isBirthdaySystemTableExists()) {
+                MyJDBC.createBirthdaySystemTable();
+            }
+
+            statement.setString(1, userId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                int day = resultSet.getInt("day");
+                int month = resultSet.getInt("month");
+                int year = resultSet.getInt("year");
+
+                    return day + " " + month + " " + year;
+
+            }
+            connection.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
         public static String getBirthday(String userId) {
@@ -211,12 +237,7 @@ public class MyJDBC /*extends ListenerAdapter*/ {
 
             // Überprüfe, ob die Tabelle CounterSystem vorhanden ist
             if (!MyJDBC.isCounterSystemTableExists()) {
-                System.out.println("[Counter-System-DB] Tabelle existiert nicht");
-                // Tabelle existiert nicht, also erstelle sie
                 MyJDBC.createCounterSystemTable();
-                System.out.println("[Counter-System-DB] Tabelle wurde erstellt");
-            } else {
-                System.out.println("[Counter-System-DB] Tabelle existiert bereits");
             }
 
             PreparedStatement selectStatement = connection.prepareStatement(

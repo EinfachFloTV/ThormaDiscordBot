@@ -2,33 +2,41 @@ package main.java.org;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class BirthdaySystem extends ListenerAdapter {
 
-    public void onReady(ReadyEvent event) {
-        scheduleDailyBirthdayCheck();
-    }
+    public void onReady(ReadyEvent event) {scheduleDailyBirthdayCheck();}
+
     /*@Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if(event.getMessage().getContentRaw().equals("geburtstagesetup")) {
+        if(event.getMessage().getContentRaw().equals("!setup geburtstage")) {
             EmbedBuilder eb = new EmbedBuilder()
                     .setTitle("Geburtstags System")
                     .setDescription("Hier könnt ihr sehen, wer alles Geburtstag hat. Wenn du möchtest, dass an deinem Geburtstag eine Nachricht gesendet wird, kannst du deinen Geburtstag hinzufügen mit:\n" +
@@ -45,6 +53,25 @@ public class BirthdaySystem extends ListenerAdapter {
             event.getChannel().sendMessageEmbeds(eb.build()).queue();
         }
     }*/
+
+
+    TextInput tag = TextInput.create("birthdayaddtagmodal", "Tag", TextInputStyle.SHORT).setRequired(true)
+            .setPlaceholder("Bitte gib hier deinen Tag des Geburtstag ein")
+            .setMaxLength(2)
+            .setMinLength(1)
+            .build();
+    TextInput monat = TextInput.create("birthdayaddmonatmodal", "Monat", TextInputStyle.SHORT).setRequired(true)
+            .setPlaceholder("Bitte gib hier deinen Monat des Geburtstag ein")
+            .setMaxLength(2)
+            .setMinLength(1)
+            .build();
+    TextInput jahr = TextInput.create("birthdayaddjahrmodal", "Jahr", TextInputStyle.SHORT).setRequired(false)
+            .setPlaceholder("Bitte gib hier dein Geburtsjahr ein (optional)")
+            .setMaxLength(4)
+            .setMinLength(4).build();
+
+    Modal modaladdbirthday = Modal.create("birthdayaddmodal", "Geburtstag hinzufügen!").addActionRow(tag).addActionRow(monat).addActionRow(jahr).build();
+
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
@@ -72,58 +99,166 @@ public class BirthdaySystem extends ListenerAdapter {
         }
     }
 
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+        String[] idParts = event.getComponentId().split(":");
+        if (idParts[0].equals("birthday")) {
+            int currentPage = Integer.parseInt(idParts[1]);
+            List<Map.Entry<String, String>> sortedBirthdays = MyJDBC.getAllBirthdays().entrySet().stream()
+                    .sorted((entry1, entry2) -> {
+                        LocalDate nextBirthday1 = getNextBirthday(entry1.getValue());
+                        LocalDate nextBirthday2 = getNextBirthday(entry2.getValue());
+                        return nextBirthday1.compareTo(nextBirthday2);
+                    })
+                    .collect(Collectors.toList());
+
+            List<MessageEmbed> pages = generateBirthdayPages(sortedBirthdays, null, event);
+
+            if (idParts[2].equals("next")) {
+                currentPage++;
+            } else if (idParts[2].equals("prev")) {
+                currentPage--;
+            }
+
+            event.editMessageEmbeds(pages.get(currentPage))
+                    .setActionRow(
+                            Button.primary("birthday:" + currentPage + ":prev", "⏪").withDisabled(currentPage == 0),
+                            Button.primary("birthday:" + currentPage + ":next", "⏩").withDisabled(currentPage == pages.size() - 1)
+                    )
+                    .queue();
+        }
+    }
+
+    public void onModalInteraction(ModalInteractionEvent event) {
+
+        if(event.getModalId().equals("birthdayaddmodal")) {
+
+            String userId = event.getUser().getId();
+            int day = Integer.parseInt(event.getValue("birthdayaddtagmodal").getAsString());
+            int month = Integer.parseInt(event.getValue("birthdayaddmonatmodal").getAsString());
+            String yearString = event.getValue("birthdayaddjahrmodal") != null ? event.getValue("birthdayaddjahrmodal").getAsString() : null;
+            Integer year = (yearString != null && !yearString.isEmpty()) ? Integer.parseInt(yearString) : null;
+
+            // Überprüfe, ob der Tag und der Monat in den gültigen Bereich fallen
+            if (month < 1 || month > 12) {
+                event.reply("Der Monat muss zwischen 1 und 12 liegen.").setEphemeral(true).queue();
+                return;
+            }
+            if (day < 1 || day > 31) {
+                event.reply("Der Tag muss zwischen 1 und 31 liegen.").setEphemeral(true).queue();
+                return;
+            }
+
+            // Überprüfe, ob das Jahr nicht größer als das aktuelle Jahr ist
+            int currentYear = LocalDate.now().getYear();
+            int yearlimit = currentYear - 1;
+            if (year != null && year > yearlimit) {
+                event.reply("Das Jahr kann nicht größer als " + yearlimit + " sein.").setEphemeral(true).queue();
+                return;
+            }
+
+            MyJDBC.addBirthday(userId, day, month, year);
+
+            String message = "Dein Geburtstag (" + event.getUser().getAsMention() + ") wurde eingetragen als UserId: " + userId + ", Tag: " + day + ", Monat: " + month;
+            if (year != null) {
+                message += ", Jahr: " + year;
+            } else {
+                message += ", Jahr: nicht eingetragen";
+            }
+
+            event.reply(message).setEphemeral(true).queue();
+        }
+    }
+
     private void handleListBirthday(SlashCommandInteractionEvent event) {
         Map<String, String> birthdays = MyJDBC.getAllBirthdays();
         if (birthdays.isEmpty()) {
             event.reply("Es sind keine Geburtstage eingetragen.").setEphemeral(true).queue();
         } else {
-            EmbedBuilder eb = new EmbedBuilder()
-                    .setTitle("Eingetragene Geburtstage")
-                    .setColor(Color.BLUE);
-            birthdays.forEach((userId, birthday) -> {
+            List<Map.Entry<String, String>> sortedBirthdays = birthdays.entrySet().stream()
+                    .sorted((entry1, entry2) -> {
+                        LocalDate nextBirthday1 = getNextBirthday(entry1.getValue());
+                        LocalDate nextBirthday2 = getNextBirthday(entry2.getValue());
+                        return nextBirthday1.compareTo(nextBirthday2);
+                    })
+                    .collect(Collectors.toList());
 
-                String[] birthdaydata = birthday.split(" ");
-                int day = Integer.parseInt(birthdaydata[0]);
-                int month = Integer.parseInt(birthdaydata[1]);
-
-                int yearnow = LocalDate.now().getYear();
-
-                int year;
-                Integer age = null;
-                if (!birthdaydata[2].isEmpty()) {
-                    year = Integer.parseInt(birthdaydata[2]);
-                } else {
-                    year = 0;
-                }
-
-                LocalDate date = LocalDate.of(yearnow, month, day);
-
-                LocalDate today = LocalDate.now();
-                age = today.getYear() - year;
-                if (today.getMonthValue() < date.getMonthValue() || (today.getMonthValue() == date.getMonthValue() && today.getDayOfMonth() < date.getDayOfMonth())) {
-                    age--;
-                }
-
-                long epochSeconds = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
-
-                String absoluteTimestamp = "<t:" + epochSeconds + ":F>";
-                String relativeTimestamp = "<t:" + epochSeconds + ":R>";
-
-                User user = event.getJDA().getUserById(userId);
-                if (user != null) {
-                    String userMention = user.getEffectiveName();
-
-                    if(year != 0) {
-                        eb.addField(userMention + " (" + age + " Lebensjahr)", absoluteTimestamp + " " + relativeTimestamp, false);
-                    } else {
-                        eb.addField(userMention , absoluteTimestamp + " " + relativeTimestamp, false);
-                    }
-                }
-            });
-
-            event.replyEmbeds(eb.build()).setEphemeral(true).queue();
+            List<MessageEmbed> pages = generateBirthdayPages(sortedBirthdays, event, null);
+            event.replyEmbeds(pages.get(0))
+                    .addActionRow(
+                            Button.primary("birthday:0:prev", "⏪").asDisabled(),
+                            Button.primary("birthday:0:next", "⏩").withDisabled(pages.size() <= 1)
+                    )
+                    .queue();
         }
     }
+
+    private List<MessageEmbed> generateBirthdayPages(List<Map.Entry<String, String>> sortedBirthdays, SlashCommandInteractionEvent slashEvent, ButtonInteractionEvent buttonEvent) {
+        List<MessageEmbed> pages = new ArrayList<>();
+        EmbedBuilder eb = new EmbedBuilder().setTitle("Eingetragene Geburtstage").setColor(Color.BLUE);
+        int count = 0;
+        int pageNumber = 1;
+
+        for (Map.Entry<String, String> entry : sortedBirthdays) {
+            if (count % 7 == 0 && count != 0) {
+                eb.setFooter("Seite " + pageNumber);
+                pages.add(eb.build());
+                eb = new EmbedBuilder().setTitle("Eingetragene Geburtstage").setColor(Color.BLUE);
+                pageNumber++;
+            }
+
+            String userId = entry.getKey();
+            String birthday = entry.getValue();
+            String[] birthdaydata = birthday.split(" ");
+            int day = Integer.parseInt(birthdaydata[0]);
+            int month = Integer.parseInt(birthdaydata[1]);
+            int year = birthdaydata.length > 2 && !birthdaydata[2].isEmpty() ? Integer.parseInt(birthdaydata[2]) : 0;
+
+            LocalDate date = LocalDate.of(LocalDate.now().getYear(), month, day);
+            if (date.isBefore(LocalDate.now())) {
+                date = date.plusYears(1);
+            }
+
+            long epochSeconds = date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
+            String absoluteTimestamp = "<t:" + epochSeconds + ":F>";
+            String relativeTimestamp = "<t:" + epochSeconds + ":R>";
+
+            User user = null;
+            if (slashEvent != null) {
+                user = slashEvent.getJDA().getUserById(userId);
+            } else if (buttonEvent != null) {
+                user = buttonEvent.getJDA().getUserById(userId);
+            }
+
+            if (user != null) {
+                String userMention = user.getEffectiveName();
+                int age = year != 0 ? LocalDate.now().getYear() - year : 0;
+                if (year != 0) {
+                    eb.addField(userMention + " (" + age + " Lebensjahr)", absoluteTimestamp + " " + relativeTimestamp, false);
+                } else {
+                    eb.addField(userMention, absoluteTimestamp + " " + relativeTimestamp, false);
+                }
+            }
+            count++;
+        }
+        eb.setFooter("Seite " + pageNumber);
+        pages.add(eb.build());
+        return pages;
+    }
+
+    private LocalDate getNextBirthday(String birthday) {
+        String[] parts = birthday.split(" ");
+        int day = Integer.parseInt(parts[0]);
+        int month = Integer.parseInt(parts[1]);
+        int year = parts.length > 2 && !parts[2].isEmpty() ? Integer.parseInt(parts[2]) : LocalDate.now().getYear();
+
+        LocalDate nextBirthday = LocalDate.of(LocalDate.now().getYear(), month, day);
+        if (nextBirthday.isBefore(LocalDate.now()) || nextBirthday.isEqual(LocalDate.now())) {
+            nextBirthday = nextBirthday.plusYears(1);
+        }
+        return nextBirthday;
+    }
+
     private void handleAdminAddBirthday(SlashCommandInteractionEvent event) {
 
         if (event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(Main.botOwnerId)) {
@@ -172,9 +307,20 @@ public class BirthdaySystem extends ListenerAdapter {
             event.reply("Hierzu hast du keine Rechte!").setEphemeral(true).queue();
         }
     }
-
     private void handleAddBirthday(SlashCommandInteractionEvent event) {
-        int day = event.getOption("tag").getAsInt();
+
+        String userId = event.getUser().getId();
+
+        // Überprüfe, ob der Benutzer bereits eingetragen ist
+        String existingBirthday = MyJDBC.getBirthday(userId);
+        if (existingBirthday != null) {
+            event.reply("Du bist bereits eingetragen. Dein Geburtstag ist: " + existingBirthday + ", um dich aus der Datenbank zu löchen gebe `/birthday delete` ein").setEphemeral(true).queue();
+            return;
+        }
+
+        event.replyModal(modaladdbirthday).queue();
+
+       /* int day = event.getOption("tag").getAsInt();
         int month = event.getOption("monat").getAsInt();
         Integer year = event.getOption("jahr") != null ? event.getOption("jahr").getAsInt() : null;
 
@@ -215,7 +361,7 @@ public class BirthdaySystem extends ListenerAdapter {
             message += ", Jahr: nicht eingetragen";
         }
 
-        event.reply(message).setEphemeral(true).queue();
+        event.reply(message).setEphemeral(true).queue();*/
     }
 
 
@@ -225,16 +371,19 @@ public class BirthdaySystem extends ListenerAdapter {
         String birthday = MyJDBC.getBirthday(userId);
         if (birthday != null) {
             EmbedBuilder eb = new EmbedBuilder()
-            .setTitle("Geburtstag von " + user.getEffectiveName())
-            .setThumbnail(user.getAvatarUrl())
-            .setDescription("Der Geburtstag von " + user.getName() + " ist am: " + birthday);
+                    .setTitle("Geburtstag von " + user.getEffectiveName())
+                    .setThumbnail(user.getAvatarUrl())
+                    .setDescription("Der Geburtstag von " + user.getName() + " ist am: " + birthday);
             event./*reply(user.getAsMention()).addEmbeds*/replyEmbeds(eb.build()).setEphemeral(true).queue();
+            //event.reply("Der Geburtstag von: " + user.getAsMention() + " ist am: " + birthday).setEphemeral(true).queue();
         } else {
             event.reply("Es wurde kein Geburtstag zu diesem Nutzer gefunden!").setEphemeral(true).queue();
         }
     }
 
+
     private void handleRemoveBirthday(SlashCommandInteractionEvent event) {
+        //User user = event.getOption("user").getAsUser();
         User user = event.getUser();
         String userId = user.getId();
         if (!MyJDBC.birthdayExists(userId)) {
@@ -263,6 +412,7 @@ public class BirthdaySystem extends ListenerAdapter {
     }
 
     private static void scheduleDailyBirthdayCheck() {
+
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         Runnable task = () -> {
@@ -274,10 +424,39 @@ public class BirthdaySystem extends ListenerAdapter {
                     for (String userId : birthdayUsers) {
                         User user = Main.client.retrieveUserById(userId).complete(); // Benutzerobjekt abrufen
                         if (user != null) {
-                    EmbedBuilder eb = new EmbedBuilder()
-                            .setTitle("Happy Birthday!")
-                            .setDescription(user.getAsMention() + " hat heute Geburtstag!!! 🎉🎉🎉\n"+
-                                    "Wir wünschen ihm/ihr alles gute");
+
+                            String birthday = MyJDBC.getBirthdayUser1(userId);
+                            String[] birthdaydata = birthday.split(" ");
+
+                            int day = Integer.parseInt(birthdaydata[0]);
+                            int month = Integer.parseInt(birthdaydata[1]);
+
+                            int year = 0;
+                            if (birthdaydata.length > 2 && !birthdaydata[2].isEmpty()) {
+                                year = Integer.parseInt(birthdaydata[2]);
+                            }
+
+                            int yearnow = LocalDate.now().getYear();
+                            LocalDate date1 = LocalDate.of(yearnow, month, day);
+                            LocalDate today1 = LocalDate.now();
+                            int age = year != 0 ? today1.getYear() - year : 0;
+
+                            if (year != 0 && (today1.getMonthValue() < date1.getMonthValue() || (today1.getMonthValue() == date1.getMonthValue() && today1.getDayOfMonth() < date1.getDayOfMonth()))) {
+                                age--;
+                            }
+
+                            EmbedBuilder eb = new EmbedBuilder()
+                                    .setTitle("Happy Birthday!")
+                                   .setThumbnail(user.getEffectiveAvatarUrl());
+
+                            if (year != 0) {
+                                eb.setDescription(user.getAsMention() + " hat heute Geburtstag!!! 🎉🎉🎉\n"+
+                                        "und wird " + age + ". Jahre alt\n" +
+                                        "Wir wünschen ihm/ihr alles Gute");
+                            } else {
+                                eb.setDescription(user.getAsMention() + " hat heute Geburtstag!!! 🎉🎉🎉\n"+
+                                        "Wir wünschen ihm/ihr alles Gute");
+                            }
 
                             channel.sendMessage(user.getAsMention()).addEmbeds(eb.build()).queue(message -> {
                                 // Reactions hinzufügen

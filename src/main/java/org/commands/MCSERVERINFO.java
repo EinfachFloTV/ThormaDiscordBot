@@ -57,9 +57,10 @@ public class MCSERVERINFO extends ListenerAdapter {
 
                Button bedrock = Button.link("https://mcstatus.io/status/bedrock/" + ip + ":" + bedrockPort, "Bedrock Status Web");
                Button java = Button.link("https://mcstatus.io/status/java/" + ip + ":" + javaPort, "Java Status Web");
+               Button laby = Button.link("https://laby.net/server/thorma90", "Server auf LabyMod");
                Button Information = Button.secondary("minecraftstatusmehrinfos", "Mehr Infos").withEmoji(Emoji.fromFormatted("❓"));
 
-                event.replyEmbeds(embedBuilder.build()).addActionRow(java,bedrock,Information).setEphemeral(true).queue();
+                event.replyEmbeds(embedBuilder.build()).addActionRow(java,bedrock,laby, Information).setEphemeral(true).queue();
 
             } catch (IOException e) {
                 event.reply("Der Serverstatus konnte nicht abgerufen werden. Bitte versuche es später erneut.").setEphemeral(true).queue();

@@ -1,4 +1,6 @@
-main\java\org\commands\MCSERVERINFO$ServerStatus.class
 main\java\org\commands\MCSERVERINFO$ServerStatus$Players.class
 main\java\org\commands\MCSERVERINFO.class
 main\java\org\commands\saySlashCommand.class
+main\java\org\commands\MCSERVERINFO$ServerStatus.class
+main\java\org\AutoPublish.class
+main\java\org\GuildLeaveOnJoin.class

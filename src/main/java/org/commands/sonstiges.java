@@ -12,7 +12,8 @@ public class sonstiges extends ListenerAdapter {
 
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 
-        if(event.getName().equals("thorma")) {
+        // Deaktiviert
+       /* if(event.getName().equals("thorma")) {
             String[] RandomNachrichten = { "Thorma stinkt nach verfaulten Thormatensuppe", "Thorma ist ein Minigame suchti", "Thorma müffelt" };
             Random random = new Random();
             int randomIndex = random.nextInt(RandomNachrichten.length);
@@ -24,10 +25,19 @@ public class sonstiges extends ListenerAdapter {
 
             User user = event.getOption("user").getAsUser();
 
-            Random random = new Random();
-            int randomNumber = random.nextInt(100) + 1;
 
-            event.reply(user.getEffectiveName() + " stinkt zu " + randomNumber + "%").queue();
-        }
+            if(user.getId().equals("691564223787958292")) {
+
+                event.reply(user.getEffectiveName() + " stinkt zu " + "100" + "%").queue();
+
+            } else {
+
+                Random random = new Random();
+                int stinkerwert = random.nextInt(100) + 1;
+
+                event.reply(user.getEffectiveName() + " stinkt zu " + stinkerwert + "%").queue();
+
+            }
+        }*/
     }
 }

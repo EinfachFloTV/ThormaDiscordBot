@@ -1,12 +1,16 @@
 package main.java.org;
 
 
+import main.java.org.Thorma90NetworkDC.welcomeandleave;
 import main.java.org.commands.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Invite;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -29,10 +33,12 @@ import java.util.Objects;
 import java.util.Scanner;
 
 public class Main {
-
+   // public static final List<String> blacklistCountingSystem = List.of("000");
+    public static final List<String> whitelistedServers = List.of("1081550768903049279", "1091783756429398016", "1172605145834594425"); // Füge die erlaubten Server-IDs hier ein
     public static String prefix = "!";
     public static JDA client;
     public static String botOwnerId = "871714118946660352";
+
 
     public static void main(String[] args) throws  InterruptedException {
         startBot();
@@ -97,14 +103,15 @@ public class Main {
                         GatewayIntent.GUILD_EMOJIS_AND_STICKERS,
                         GatewayIntent.GUILD_MESSAGE_TYPING,
                         GatewayIntent.GUILD_MESSAGE_REACTIONS,
-                        GatewayIntent.GUILD_BANS);
+                        GatewayIntent.GUILD_BANS,
+                        GatewayIntent.GUILD_MESSAGES,
+                        GatewayIntent.DIRECT_MESSAGE_REACTIONS);
 
 
         jda.setActivity(Activity.streaming("mit Thorma", "https://twitch.tv/thorma90"));
 
 
-        jda.enableCache(CacheFlag.ONLINE_STATUS);
-        EnumSet<CacheFlag> enumSet = EnumSet.of(CacheFlag.ONLINE_STATUS, CacheFlag.CLIENT_STATUS, CacheFlag.EMOJI, CacheFlag.VOICE_STATE, CacheFlag.STICKER);
+        EnumSet<CacheFlag> enumSet = EnumSet.of(CacheFlag.EMOJI, CacheFlag.VOICE_STATE, CacheFlag.STICKER);
         jda.enableCache(enumSet);
         OffsetDateTime botStartTime = OffsetDateTime.now();
         jda.addEventListeners(
@@ -114,6 +121,7 @@ public class Main {
                 new BirthdaySystem(),
                 new RandomMeme(),
                 new wetterbericht(),
+                new GuildLeaveOnJoin(),
                 new WitzGen(),
                 new MCProfileCommandSlash(),
                 new embed(),
@@ -124,7 +132,8 @@ public class Main {
                 new sonstiges(),
                 new MCSERVERINFO(),
                 new FlipCoinSlashCommand(),
-                new CountingSystem()
+                new CountingSystem(),
+                new AutoPublish()
         );
 
         client = jda.build().awaitReady();
@@ -135,13 +144,21 @@ public class Main {
 
         System.out.println("[Bot] Der Prefix lautet: " + Main.prefix);
 
-
-
         // Gildenliste drucken
         if (!guilds.isEmpty()) {
             System.out.println("[Bot] Befindet sich auf folgenden Servern:");
             for (Guild guild : guilds) {
                 System.out.println("Server-Name: " + guild.getName() + ", Server-ID: " + guild.getId());
+            }
+        }
+
+
+        // Überprüfe jeden Server in der Gildenliste
+        for (Guild guild : guilds) {
+            if (!Main.whitelistedServers.contains(guild.getId())) {
+                guild.leave().queue(); // Bot verlässt den nicht autorisierten Server
+                System.out.println("Bot wurde von einem nicht autorisierten Server entfernt " +
+                        "Server-Name: " + guild.getName() + ", Server-ID: " + guild.getId());
             }
         }
 
@@ -152,9 +169,9 @@ public class Main {
         OptionData optionDataNachricht = new OptionData(OptionType.STRING, "nachricht", "Die Nachricht die vorgelesen werden soll!", true);
         OptionData optionDataUser = new OptionData(OptionType.USER, "user", "Wähle einen Benutzer!", true);
 
-
     client.getGuildById(Variable.server_id).updateCommands().addCommands(
-                Commands.slash("bot", "Bot Einstellungen!")
+
+            Commands.slash("bot", "Bot Einstellungen!")
                         .addSubcommands(new SubcommandData("info", "Zeigt Information zum Bot an!"))
                         .addSubcommands(new SubcommandData("restart", "Hier mit kannst du den Bot Restarten!"))
                         .addSubcommands(new SubcommandData("stop", "Hier mit kannst du den Bot Stoppen!")),
@@ -162,9 +179,9 @@ public class Main {
                 //Command: /birthday
                 Commands.slash("birthday", "Bearbeite den Geburtstag")
                         .addSubcommands(new SubcommandData("add", "Füge deinen Geburtstag hinzu.")
-                                .addOption(OptionType.INTEGER, "tag", "Der Tag deines Geburtstags.", true)
+                               /* .addOption(OptionType.INTEGER, "tag", "Der Tag deines Geburtstags.", true)
                                 .addOption(OptionType.INTEGER, "monat", "Der Monat deines Geburtstags.", true)
-                                .addOption(OptionType.INTEGER, "jahr", "Das Jahr in dem du geboren wurdest.", false)
+                                .addOption(OptionType.INTEGER, "jahr", "Das Jahr in dem du geboren wurdest.", false)*/
                         )
                         .addSubcommands(new SubcommandData("show", "Zeigt den Geburtstag von einem User.")
                                 .addOption(OptionType.USER, "user", "Hier bitte den Nutzer auswählen.", true)
@@ -197,10 +214,14 @@ public class Main {
                 // Command: /embed
                 Commands.slash("embed", "Sende ein belibiges Embed in diesen Channel!"),
                 // Ende
-                // Command: /serverinfo
-                Commands.slash("server", "Zeigt dir Informationen dieses Servers an.")
-                        .addSubcommands(new SubcommandData("info", "Zeigt dir Informationen dieses Servers an.")),
-                // Ende
+
+                //Command: /countingsystem
+            Commands.slash("countingsystem", "Das Counting System!")
+                    .addSubcommands(new SubcommandData("set", "Setze die nächste Zahl die geschrieben werden soll!")
+                            .addOptions(optionDataUserId)
+                            .addOptions(optionDatanextNum)
+                    ),
+                //Ende
 
                 // Command: /flipcoin
                 Commands.slash("flipcoin", "Werfe eine Münze"),
