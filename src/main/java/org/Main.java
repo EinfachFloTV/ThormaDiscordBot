@@ -178,6 +178,8 @@ public class Main {
 
                 //Command: /birthday
                 Commands.slash("birthday", "Bearbeite den Geburtstag")
+                        .addSubcommands(new SubcommandData("help", "")
+                        )
                         .addSubcommands(new SubcommandData("add", "Füge deinen Geburtstag hinzu.")
                                /* .addOption(OptionType.INTEGER, "tag", "Der Tag deines Geburtstags.", true)
                                 .addOption(OptionType.INTEGER, "monat", "Der Monat deines Geburtstags.", true)
@@ -187,6 +189,8 @@ public class Main {
                                 .addOption(OptionType.USER, "user", "Hier bitte den Nutzer auswählen.", true)
                         )
                         .addSubcommands(new SubcommandData("list", "Zeigt alle Geburtstage an.")
+                        )
+                        .addSubcommands(new SubcommandData("next", "Zeigt alle Geburtstage an.")
                         )
                         .addSubcommands(new SubcommandData("delete", "Lösche dein Geburtstag aus der Liste.")
                         )

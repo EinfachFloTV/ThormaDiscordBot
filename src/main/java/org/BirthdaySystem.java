@@ -55,17 +55,17 @@ public class BirthdaySystem extends ListenerAdapter {
     }*/
 
 
-    TextInput tag = TextInput.create("birthdayaddtagmodal", "Tag", TextInputStyle.SHORT).setRequired(true)
+    TextInput tag = TextInput.create("birthdayaddtagmodal", "Tag (z.B. 6 für den 6ten Tag im Monat)", TextInputStyle.SHORT).setRequired(true)
             .setPlaceholder("Bitte gib hier deinen Tag des Geburtstag ein")
             .setMaxLength(2)
             .setMinLength(1)
             .build();
-    TextInput monat = TextInput.create("birthdayaddmonatmodal", "Monat", TextInputStyle.SHORT).setRequired(true)
+    TextInput monat = TextInput.create("birthdayaddmonatmodal", "Monat (z.B. 4 für April)", TextInputStyle.SHORT).setRequired(true)
             .setPlaceholder("Bitte gib hier deinen Monat des Geburtstag ein")
             .setMaxLength(2)
             .setMinLength(1)
             .build();
-    TextInput jahr = TextInput.create("birthdayaddjahrmodal", "Jahr", TextInputStyle.SHORT).setRequired(false)
+    TextInput jahr = TextInput.create("birthdayaddjahrmodal", "Jahr (z.B. 2006), (optional)", TextInputStyle.SHORT).setRequired(false)
             .setPlaceholder("Bitte gib hier dein Geburtsjahr ein (optional)")
             .setMaxLength(4)
             .setMinLength(4).build();
@@ -77,6 +77,9 @@ public class BirthdaySystem extends ListenerAdapter {
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (event.getName().equals("birthday")) {
             switch (event.getSubcommandName()) {
+                case "help":
+                    handlehelpBirthday(event);
+                    break;
                 case "add":
                     handleAddBirthday(event);
                     break;
@@ -87,6 +90,9 @@ public class BirthdaySystem extends ListenerAdapter {
                     handleRemoveBirthday(event);
                     break;
                 case "list":
+                    handleListBirthday(event);
+                    break;
+                case "next":
                     handleListBirthday(event);
                     break;
                 case "admin-add":
@@ -170,6 +176,28 @@ public class BirthdaySystem extends ListenerAdapter {
         }
     }
 
+    private void handlehelpBirthday(SlashCommandInteractionEvent event) {
+
+            EmbedBuilder eb = new EmbedBuilder()
+                    .setTitle("Geburtstags System")
+                    .setDescription("Wenn du möchtest, dass an deinem Geburtstag eine Nachricht gesendet wird, kannst du deinen Geburtstag hinzufügen mit:\n" +
+                            "\n" +
+                            "/birthday add\n" +
+                            "\n\n" +
+                            "Um einen Geburtstag zu löschen, benutze:\n" +
+                            "\n" +
+                            "/birthday delete\n" +
+                            "\n\n" +
+                            "Um zu sehen wann ein bestimmter Nutzer geburtstag hat, benutze:\n" +
+                            "\n" +
+                            "/birthday show [user]\n" +
+                            "\n\n" +
+                            "Um alle Geburtstage zu sehen, benutze:\n" +
+                            "\n" +
+                            "/birthday list\n");
+
+            event.replyEmbeds(eb.build()).setEphemeral(true).queue();
+    }
     private void handleListBirthday(SlashCommandInteractionEvent event) {
         Map<String, String> birthdays = MyJDBC.getAllBirthdays();
         if (birthdays.isEmpty()) {
