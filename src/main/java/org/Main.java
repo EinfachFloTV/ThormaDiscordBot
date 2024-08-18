@@ -178,7 +178,7 @@ public class Main {
 
                 //Command: /birthday
                 Commands.slash("birthday", "Bearbeite den Geburtstag")
-                        .addSubcommands(new SubcommandData("help", "")
+                        .addSubcommands(new SubcommandData("help", "Hilfe zum Geburtstagssystem.")
                         )
                         .addSubcommands(new SubcommandData("add", "Füge deinen Geburtstag hinzu.")
                                /* .addOption(OptionType.INTEGER, "tag", "Der Tag deines Geburtstags.", true)
