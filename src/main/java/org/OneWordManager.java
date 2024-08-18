@@ -18,12 +18,15 @@ public class OneWordManager extends ListenerAdapter {
             String message = event.getMessage().getContentRaw().trim();
             String userId = event.getAuthor().getId();
 
-            if (message.equalsIgnoreCase("!resetstory") || message.equals(".")) {
-                String currentStory = MyJDBC.getCurrentStory().trim();
-                event.getChannel().sendMessage("Die Geschichte wurde beendet!\nStory: `" + currentStory + "`").queue();
-                MyJDBC.saveCurrentStory("");
-                MyJDBC.saveLastUserId("");
-                event.getChannel().sendMessage("Eine neue Geschichte hat begonnen!").queueAfter(3, TimeUnit.SECONDS);
+            String lastUserId = MyJDBC.getLastUserId();
+            if (userId.equals(lastUserId)) {
+                event.getChannel().sendMessage("Warte, bis jemand anderes ein Wort hinzugefügt hat!")
+                        .queue(msg -> msg.delete().queueAfter(5, TimeUnit.SECONDS));
+                try {
+                    event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS);
+                } catch (InsufficientPermissionException e) {
+                    System.out.println("Fehlende Berechtigung zum Löschen der Nachricht.");
+                }
                 return;
             }
 
@@ -38,15 +41,13 @@ public class OneWordManager extends ListenerAdapter {
                 return;
             }
 
-            String lastUserId = MyJDBC.getLastUserId();
-            if (userId.equals(lastUserId)) {
-                event.getChannel().sendMessage("Warte, bis jemand anderes ein Wort hinzugefügt hat!")
-                        .queue(msg -> msg.delete().queueAfter(5, TimeUnit.SECONDS));
-                try {
-                    event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS);
-                } catch (InsufficientPermissionException e) {
-                    System.out.println("Fehlende Berechtigung zum Löschen der Nachricht.");
-                }
+            if (message.equalsIgnoreCase("!resetstory") || message.equals(".")) {
+                String currentStory = MyJDBC.getCurrentStory().trim();
+                event.getMessage().addReaction(Emoji.fromFormatted("✅")).queue();
+                event.getChannel().sendMessage("Die Geschichte wurde beendet!\nStory: `" + currentStory + "`").queue();
+                MyJDBC.saveCurrentStory("");
+                MyJDBC.saveLastUserId("");
+                event.getChannel().sendMessage("Eine neue Geschichte hat begonnen!").queueAfter(3, TimeUnit.SECONDS);
                 return;
             }
 

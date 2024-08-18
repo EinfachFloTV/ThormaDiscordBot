@@ -4,14 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9b732af0-fa41-4d0c-9d9c-5c0bf9ebe742" name="Changes" comment="a mini bug fix">
-      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/MessageReaction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/MyJDBC.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/MyJDBC.java" afterDir="false" />
-    </list>
+    <list default="true" id="9b732af0-fa41-4d0c-9d9c-5c0bf9ebe742" name="Changes" comment="a mini bug fix and added a OneWordSystem" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -90,7 +83,7 @@
       <option name="presentableId" value="Default" />
       <updated>1723980357794</updated>
       <workItem from="1723980358916" duration="223000" />
-      <workItem from="1723995687599" duration="10198000" />
+      <workItem from="1723995687599" duration="10236000" />
     </task>
     <task id="LOCAL-00001" summary="a mini bug fix">
       <option name="closed" value="true" />
@@ -100,7 +93,15 @@
       <option name="project" value="LOCAL" />
       <updated>1723980576867</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="a mini bug fix and added a OneWordSystem">
+      <option name="closed" value="true" />
+      <created>1724006659394</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1724006659394</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -108,6 +109,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="a mini bug fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="a mini bug fix" />
+    <MESSAGE value="a mini bug fix and added a OneWordSystem" />
+    <option name="LAST_COMMIT_MESSAGE" value="a mini bug fix and added a OneWordSystem" />
   </component>
 </project>
