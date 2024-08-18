@@ -133,7 +133,9 @@ public class Main {
                 new MCSERVERINFO(),
                 new FlipCoinSlashCommand(),
                 new CountingSystem(),
-                new AutoPublish()
+                new AutoPublish(),
+                new MessageReaction(),
+                new OneWordManager()
         );
 
         client = jda.build().awaitReady();

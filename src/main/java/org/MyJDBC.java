@@ -12,6 +12,74 @@ public class MyJDBC extends ListenerAdapter {
 
     private static final String DB_URL = Variable.DB_URL;
 
+    static {
+        checkAndCreateStoryTable();
+    }
+
+    private static void checkAndCreateStoryTable() {
+        try (Connection connection = DriverManager.getConnection(DB_URL);
+             Statement statement = connection.createStatement()) {
+            String createTableQuery = "CREATE TABLE IF NOT EXISTS OneWordStorys (" +
+                    "id INT PRIMARY KEY AUTO_INCREMENT, " +
+                    "story TEXT, " +
+                    "lastUserId VARCHAR(255)" +
+                    ")";
+            statement.execute(createTableQuery);
+            // Ensure there's always one row to update
+            statement.execute("INSERT IGNORE INTO OneWordStorys (id, story, lastUserId) VALUES (1, '', '')");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getCurrentStory() {
+        try (Connection connection = DriverManager.getConnection(DB_URL);
+             Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery("SELECT story FROM OneWordStorys WHERE id = 1");
+            if (resultSet.next()) {
+                return resultSet.getString("story");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public static void saveCurrentStory(String story) {
+        try (Connection connection = DriverManager.getConnection(DB_URL);
+             PreparedStatement preparedStatement = connection.prepareStatement(
+                     "UPDATE OneWordStorys SET story = ? WHERE id = 1")) {
+            preparedStatement.setString(1, story);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getLastUserId() {
+        try (Connection connection = DriverManager.getConnection(DB_URL);
+             Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery("SELECT lastUserId FROM OneWordStorys WHERE id = 1");
+            if (resultSet.next()) {
+                return resultSet.getString("lastUserId");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public static void saveLastUserId(String userId) {
+        try (Connection connection = DriverManager.getConnection(DB_URL);
+             PreparedStatement preparedStatement = connection.prepareStatement(
+                     "UPDATE OneWordStorys SET lastUserId = ? WHERE id = 1")) {
+            preparedStatement.setString(1, userId);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static boolean birthdayExists(String userId) {
         String query = "SELECT 1 FROM BirthdaySystem WHERE userId = ?";
         try (Connection connection = DriverManager.getConnection(DB_URL);
