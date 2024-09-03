@@ -20,7 +20,7 @@ public class OneWordManager extends ListenerAdapter {
 
             String lastUserId = MyJDBC.getLastUserId();
             if (userId.equals(lastUserId)) {
-                event.getChannel().sendMessage(event.getMember().getEffectiveName() + " Warte, bis jemand anderes ein Wort hinzugefügt hat!")
+                event.getChannel().sendMessage(event.getMember().getEffectiveName() + ", warte, bis jemand anderes ein Wort hinzugefügt hat!")
                         .queue(msg -> msg.delete().queueAfter(5, TimeUnit.SECONDS));
                 try {
                     event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS);
@@ -30,8 +30,8 @@ public class OneWordManager extends ListenerAdapter {
                 return;
             }
 
-            if (message.contains(" ")) {
-                event.getChannel().sendMessage(event.getMember().getEffectiveName() + " Bitte sende nur ein Wort auf einmal!")
+            if (message.contains(" ") || message.contains("_")) {
+                event.getChannel().sendMessage(event.getMember().getEffectiveName() + ", bitte sende nur ein Wort auf einmal!")
                         .queue(msg -> msg.delete().queueAfter(5, TimeUnit.SECONDS));
                 try {
                     event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS);
