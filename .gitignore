@@ -1,9 +1,12 @@
 Variable.*
-Thorma90NetworkDC/
-*.ist
+variable.*
+Thorma90NetworkDC
+*.iso
 *.Ist
 # Compiled class file
 *.class
+*.png
+transcripts
 
 # Log file
 *.log
