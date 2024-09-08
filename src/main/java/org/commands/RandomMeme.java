@@ -1,11 +1,18 @@
 package main.java.org.commands;
 
+import java.awt.*;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -18,61 +25,60 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class RandomMeme extends ListenerAdapter {
-
-    private static final String[] MEME_SUBREDDITS = { "AnimalMemes", "wholesomememes" };
-    private static Random random = new Random();
-    private static int randomIndex = random.nextInt(MEME_SUBREDDITS.length);
-    private static String REDDIT_API_ENDPOINT = "https://www.reddit.com/r/"+ MEME_SUBREDDITS[randomIndex] +"/hot.json";
-
-    private static OkHttpClient httpClient = new OkHttpClient.Builder()
-            .addInterceptor(chain -> {
-                Request original = chain.request();
-                Request request = original.newBuilder().header("User-Agent", "RandomMemeThormaBot/1.0").build();
-                return chain.proceed(request);
-            }).build();
-    private final Set<String> fetchedMemes = new HashSet<>();
-
     @Override
-    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         if (event.getName().equals("meme")) {
+            try {
+                JSONObject memeInfo = getMeme();
+                if (!memeInfo.has("title") || !memeInfo.has("imageUrl") || !memeInfo.has("postUrl") || !memeInfo.has("subreddit")) {
+                    throw new Exception("Unvollständige Meme-Daten vom Server");
+                }
 
-            String memeUrl = getRandomMemeUrlFromReddit();
-            if(memeUrl != null) {
-                MessageEmbed embed = new EmbedBuilder().setTitle("Hier ist ein Random Meme:").setImage(memeUrl)
-                        .setFooter("Die Posts stammen aus Reddit!").build();
-                event.replyEmbeds(embed).queue();
-            } else {
-                event.reply("Bitte versuche es später noch einmal!").setEphemeral(true).queue();
+                String title = memeInfo.getString("title");
+                String imageUrl = memeInfo.getString("imageUrl");
+                String postUrl = memeInfo.getString("postUrl");
+                String subreddit = memeInfo.getString("subreddit");
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(Color.BLUE);
+                builder.setTitle(title, postUrl);
+                builder.setImage(imageUrl);
+                String footerText = "Meme von r/" + subreddit;
+                builder.setFooter(footerText);
+
+                event.replyEmbeds(builder.build()).queue();
+            }
+            catch (Exception e) {
+                event.reply("Es gab einen Fehler beim Abrufen des Memes: " + e.getMessage()).queue();
             }
         }
     }
 
-    private String getRandomMemeUrlFromReddit() {
-        for (String subreddit : MEME_SUBREDDITS) {
-            String requestUrl = String.format(REDDIT_API_ENDPOINT, subreddit);
-            try {
-                Request request = new Request.Builder().url(requestUrl).build();
-                Response response = httpClient.newCall(request).execute();
-                if (!response.isSuccessful()) {
-                    throw new IOException("Unexpected code " + response);
-                }
-                JSONObject jsonResponse = new JSONObject(response.body().string());
-                JSONArray posts = jsonResponse.getJSONObject("data").getJSONArray("children");
-                for (int i = 0; i < posts.length(); i++) {
-                    JSONObject postData = posts.getJSONObject(i).getJSONObject("data");
-                    String imageUrl = postData.getString("url");
-                    if (!fetchedMemes.contains(imageUrl) && (imageUrl.endsWith(".jpg") || imageUrl.endsWith(".png")
-                            || imageUrl.endsWith(".gif"))) {
-                        fetchedMemes.add(imageUrl);
-                        return imageUrl;
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    private JSONObject getMeme() throws Exception {
+        URL url = new URL("https://bensonheimer992.np200.de/animalmemes");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+
+        int responseCode = connection.getResponseCode();
+        if (responseCode != 200) {
+            throw new Exception("Server returned code " + responseCode);
         }
-        return null;
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String inputLine;
+        StringBuilder response = new StringBuilder();
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        String jsonResponse = response.toString();
+
+        if (jsonResponse.isEmpty()) {
+            throw new Exception("Empty response from server");
+        }
+
+        return new JSONObject(jsonResponse);
     }
 }
+
