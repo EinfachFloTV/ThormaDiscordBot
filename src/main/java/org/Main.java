@@ -1,15 +1,14 @@
 package main.java.org;
 
 
+import io.github.cdimascio.dotenv.Dotenv;
+import lombok.Getter;
 import main.java.org.commands.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Invite;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -23,24 +22,33 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.LocalDate;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
 
 public class Main {
-   // public static final List<String> blacklistCountingSystem = List.of("000");
-    public static final List<String> whitelistedServers = List.of("1081550768903049279", "1091783756429398016", "1172605145834594425"); // Füge die erlaubten Server-IDs hier ein
-    public static String prefix = "!";
-    public static JDA client;
-    public static String botOwnerId = "871714118946660352";
+    @Getter
+    static Dotenv env;
 
+   // public static final List<String> blacklistCountingSystem = List.of("000");
+    public static List<String> whitelistedServers = List.of("1081550768903049279", "1091783756429398016", "1172605145834594425"); // Füge die erlaubten Server-IDs hier ein
+    public static String prefix;
+    public static String botOwnerId;
+    public static JDA client;
 
     public static void main(String[] args) throws  InterruptedException {
+        setupEnv();
+
+        env = Dotenv.configure().filename(".env").load();
+
+        prefix = env.get("BOT_PREFIX");
+        botOwnerId = env.get("BOT_OWNER_ID");
+
         startBot();
+
         new Thread(() -> {
 
             BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
@@ -102,7 +110,7 @@ public class Main {
                         GatewayIntent.GUILD_EMOJIS_AND_STICKERS,
                         GatewayIntent.GUILD_MESSAGE_TYPING,
                         GatewayIntent.GUILD_MESSAGE_REACTIONS,
-                        GatewayIntent.GUILD_BANS,
+                        GatewayIntent.GUILD_MODERATION,
                         GatewayIntent.GUILD_MESSAGES,
                         GatewayIntent.DIRECT_MESSAGE_REACTIONS);
 
@@ -265,4 +273,20 @@ public class Main {
         ).queue();
 
     }
+
+    private static void setupEnv() {
+
+        Path envPath = Path.of(".env");
+        try {
+            if (!Files.exists(envPath)) {
+                Files.createFile(envPath);
+                String values = "TOKEN=\nBOT_PREFIX=\nBOT_OWNER_ID=\nDB_URL=\nWEATHER_API_KEY=";
+                Files.writeString(envPath, values, StandardOpenOption.WRITE);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 }

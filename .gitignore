@@ -6,6 +6,8 @@ Thorma90NetworkDC
 # Compiled class file
 *.class
 *.png
+*.env
+.env
 transcripts
 
 # Log file
